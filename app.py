@@ -11,7 +11,7 @@ def draw_centered_text(draw, text, font, x, y, max_width):
     new_x = x + (max_width - text_width) // 2  # Centering logic
     draw.text((new_x, y), text, font=font, fill="black")
 
-def generate_certificate_pdf(student_data, template_image, text_positions, font_size=24):
+def generate_certificate_pdf(student_data, template_image, text_positions, font_size=32):
     image = Image.open(template_image)
     draw = ImageDraw.Draw(image)
     
@@ -53,35 +53,36 @@ if uploaded_pdf and uploaded_data:
     
     text_positions = {
         "SR. No.": (200, 500, 200),
-        "Std": (100, 100, 100),
-        "Div": (120, 100, 110),
+        "Std": (1000, 1455, 100),
+        "Div": (1030, 1455, 110),
         "GR.No.": (1450, 500, 100),
         "Student  ID:": (350, 590, 200),  # Keep only one version with exact CSV column name
         "UID No.": (450, 675, 250),
-        "Name": (450, 750, 400),
-        "Fathers Name": (1000, 750, 400),
-        "Surname": (450, 830, 400),
-        "Mothers Name": (990, 830, 500),
-        "Nationality": (300, 910, 200),
-        "Mother Tongue": (950, 910, 600),
-        "Religion": (300, 990, 200),
-        "Caste": (700, 990, 200),
-        "Sub Caste": (950, 990, 200),
-        "Birth Place ": (200, 550, 300),
-        "Tal": (500, 550, 200),
-        "Dist": (200, 600, 200),
-        "State": (500, 600, 200),
-        "Country": (200, 650, 200),
-        "Birth Date ": (500, 650, 250),
-        "In Words": (250, 700, 500),
-        "Previous School Attended ": (250, 750, 600),
-        "Date of Admission ": (500, 750, 200),
-        "Progress": (250, 800, 200),
-        "Conduct": (500, 800, 200),
-        "Date of Leaving School ": (250, 850, 300),
-        "Last Class Attended ": (500, 850, 300),
-        "Reason of Leaving the School ": (250, 900, 500),
-        "Remark": (500, 900, 300),
+        "Name": (460, 755, 400),
+        "Fathers Name": (1030, 745, 400),
+        "Surname": (470, 825, 400),
+        "Mothers Name": (1030, 825, 500),
+        "Nationality": (320, 900, 200),
+        "Mother Tongue": (970, 900, 600),
+        "Religion": (320, 980, 200),
+        "Caste": (700, 985, 200),
+        "Sub Caste": (1300, 980, 200),
+        "Birth Place": (600, 1060, 200),
+        "Tal": (950, 1060, 200),
+        "Dist": (1320, 1060, 200),
+        "State": (500, 1140, 200),
+        "Country": (1100, 1140, 200),
+        "Birth Date": (700, 1215, 250),
+        "In Words": (300, 1295, 500),
+        "Previous School Attended": (470, 1375, 600),
+        "Date of Admission": (510, 1450, 200),
+        "Progress": (330, 1530, 200),
+        "Conduct": (1100,1530, 200),
+        "Date of Leaving School": (470, 1610, 300),
+        "Last Class Attended": (950, 1610, 300),
+        "From": (1300, 1610, 200),
+        "Reason of Leaving the School": (550, 1685, 500),
+        "Remark": (310, 1765, 300),
     }
 
     for idx, row in df.iterrows():
