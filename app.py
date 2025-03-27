@@ -15,10 +15,12 @@ def generate_certificate_pdf(student_data, template_image, text_positions, font_
     image = Image.open(template_image)
     draw = ImageDraw.Draw(image)
     
-    try:
-        font = ImageFont.truetype("arial.ttf", font_size)
-    except IOError:
-        font = ImageFont.load_default()
+    font_path = "DejaVuSans.ttf"  # Default font for compatibility
+    if not os.path.exists(font_path):
+        import urllib.request
+        url="https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans.ttf"
+        urllib.request.urlretrieve(url,font_path)
+    font=ImageFont.truetype(font_path,font_size)
     
     for field, (x, y, max_width) in text_positions.items():
         text = str(student_data.get(field, ''))
