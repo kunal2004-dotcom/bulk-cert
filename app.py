@@ -11,7 +11,7 @@ def draw_centered_text(draw, text, font, x, y, max_width):
     new_x = x + (max_width - text_width) // 2  # Centering logic
     draw.text((new_x, y), text, font=font, fill="black")
 
-def generate_certificate_pdf(student_data, template_image, text_positions, font_size=60):
+def generate_certificate_pdf(student_data, template_image, text_positions, font_size):
     image = Image.open(template_image)
     draw = ImageDraw.Draw(image)
     
@@ -34,6 +34,8 @@ st.title("School Certificate Generator")
 uploaded_pdf = st.file_uploader("Upload Certificate Template (PDF)", type=["pdf"])
 uploaded_data = st.file_uploader("Upload Student Data (.csv or .xlsx)", type=["csv", "xlsx"])
 
+font_size = st.slider("Select Font Size", min_value=30, max_value=100, value=60)
+
 if uploaded_pdf and uploaded_data:
     pdf_path = "uploaded_certificate.pdf"
     with open(pdf_path, "wb") as f:
@@ -44,9 +46,6 @@ if uploaded_pdf and uploaded_data:
 
     if uploaded_data.name.endswith('.csv'):
         df = pd.read_csv(uploaded_data, encoding='cp1252', skipinitialspace=False)
-        # Print exact column names for debugging
-        st.write("Original column names:", [f"'{col}'" for col in df.columns])
-        # Clean up column names by stripping whitespace
         df.columns = df.columns.str.strip()
     else:
         df = pd.read_excel(uploaded_data)
@@ -56,7 +55,7 @@ if uploaded_pdf and uploaded_data:
         "Std": (1000, 1455, 100),
         "Div": (1030, 1455, 110),
         "GR.No.": (1450, 500, 100),
-        "Student  ID:": (350, 590, 200),  # Keep only one version with exact CSV column name
+        "Student ID": (350, 590, 200),
         "UID No.": (450, 675, 250),
         "Name": (460, 755, 400),
         "Fathers Name": (1030, 745, 400),
@@ -87,11 +86,7 @@ if uploaded_pdf and uploaded_data:
 
     for idx, row in df.iterrows():
         student_data = row.to_dict()
-        st.write("All data for debugging:", student_data)
-        st.write("SR. No.:", student_data.get("SR. No.", "Not found"))
-        st.write("Student ID:", student_data.get("Student ID", "Not found"))
-        st.write(f"Preview for: {student_data.get('Name', '')}")
-        cert_image = generate_certificate_pdf(student_data, template_image_path, text_positions)
+        cert_image = generate_certificate_pdf(student_data, template_image_path, text_positions, font_size)
         st.image(cert_image, caption=f"Preview: {student_data.get('Name', '')}", use_column_width=True)
 
     if st.button("Generate All and Download"):
@@ -99,12 +94,9 @@ if uploaded_pdf and uploaded_data:
         with ZipFile(zip_buffer, 'w') as zf:
             for idx, row in df.iterrows():
                 student_data = row.to_dict()
-                cert_buffer = generate_certificate_pdf(student_data, template_image_path, text_positions)
+                cert_buffer = generate_certificate_pdf(student_data, template_image_path, text_positions, font_size)
                 zf.writestr(f"{student_data.get('Name', 'certificate')}_{idx}.png", cert_buffer.getvalue())
         zip_buffer.seek(0)
         st.download_button("Download All Certificates as ZIP", zip_buffer.getvalue(), "certificates.zip")
-    # Add debug print for the first row
-    if not df.empty:
-        st.write("First row data:", df.iloc[0].to_dict())
 else:
     st.warning("Please upload both a certificate template and student data file.")
