@@ -16,10 +16,6 @@ def generate_certificate_pdf(student_data, template_image, text_positions, font_
     draw = ImageDraw.Draw(image)
     
     font_path = "DejaVuSans.ttf"  # Default font for compatibility
-    if not os.path.exists(font_path):
-        import urllib.request
-        url="https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans.ttf"
-        urllib.request.urlretrieve(url,font_path)
     font=ImageFont.truetype(font_path,font_size)
     
     for field, (x, y, max_width) in text_positions.items():
