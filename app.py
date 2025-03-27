@@ -44,9 +44,6 @@ if uploaded_pdf and uploaded_data:
 
     if uploaded_data.name.endswith('.csv'):
         df = pd.read_csv(uploaded_data, encoding='cp1252', skipinitialspace=False)
-        # Print exact column names for debugging
-        st.write("Original column names:", [f"'{col}'" for col in df.columns])
-        # Clean up column names by stripping whitespace
         df.columns = df.columns.str.strip()
     else:
         df = pd.read_excel(uploaded_data)
@@ -87,10 +84,6 @@ if uploaded_pdf and uploaded_data:
 
     for idx, row in df.iterrows():
         student_data = row.to_dict()
-        st.write("All data for debugging:", student_data)
-        st.write("SR. No.:", student_data.get("SR. No.", "Not found"))
-        st.write("Student ID:", student_data.get("Student ID", "Not found"))
-        st.write(f"Preview for: {student_data.get('Name', '')}")
         cert_image = generate_certificate_pdf(student_data, template_image_path, text_positions)
         st.image(cert_image, caption=f"Preview: {student_data.get('Name', '')}", use_column_width=True)
 
@@ -103,8 +96,5 @@ if uploaded_pdf and uploaded_data:
                 zf.writestr(f"{student_data.get('Name', 'certificate')}_{idx}.png", cert_buffer.getvalue())
         zip_buffer.seek(0)
         st.download_button("Download All Certificates as ZIP", zip_buffer.getvalue(), "certificates.zip")
-    # Add debug print for the first row
-    if not df.empty:
-        st.write("First row data:", df.iloc[0].to_dict())
 else:
     st.warning("Please upload both a certificate template and student data file.")
