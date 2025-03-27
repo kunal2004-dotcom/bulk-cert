@@ -11,7 +11,7 @@ def draw_centered_text(draw, text, font, x, y, max_width):
     new_x = x + (max_width - text_width) // 2  # Centering logic
     draw.text((new_x, y), text, font=font, fill="black")
 
-def generate_certificate_pdf(student_data, template_image, text_positions, font_size=60):
+def generate_certificate_pdf(student_data, template_image, text_positions, font_size):
     image = Image.open(template_image)
     draw = ImageDraw.Draw(image)
     
@@ -34,11 +34,13 @@ st.title("School Certificate Generator")
 uploaded_pdf = st.file_uploader("Upload Certificate Template (PDF)", type=["pdf"])
 uploaded_data = st.file_uploader("Upload Student Data (.csv or .xlsx)", type=["csv", "xlsx"])
 
+font_size = st.slider("Select Font Size", min_value=20, max_value=100, value=60, step=2)
+
 if uploaded_pdf and uploaded_data:
     pdf_path = "uploaded_certificate.pdf"
     with open(pdf_path, "wb") as f:
         f.write(uploaded_pdf.read())
-    images = convert_from_path(pdf_path, first_page=1, last_page=1, poppler_path="/usr/bin/")
+    images = convert_from_path(pdf_path, first_page=1, last_page=1)
     template_image_path = "certificate_template.png"
     images[0].save(template_image_path, "PNG")
 
@@ -84,7 +86,7 @@ if uploaded_pdf and uploaded_data:
 
     for idx, row in df.iterrows():
         student_data = row.to_dict()
-        cert_image = generate_certificate_pdf(student_data, template_image_path, text_positions)
+        cert_image = generate_certificate_pdf(student_data, template_image_path, text_positions, font_size)
         st.image(cert_image, caption=f"Preview: {student_data.get('Name', '')}", use_column_width=True)
 
     if st.button("Generate All and Download"):
@@ -92,7 +94,7 @@ if uploaded_pdf and uploaded_data:
         with ZipFile(zip_buffer, 'w') as zf:
             for idx, row in df.iterrows():
                 student_data = row.to_dict()
-                cert_buffer = generate_certificate_pdf(student_data, template_image_path, text_positions)
+                cert_buffer = generate_certificate_pdf(student_data, template_image_path, text_positions, font_size)
                 zf.writestr(f"{student_data.get('Name', 'certificate')}_{idx}.png", cert_buffer.getvalue())
         zip_buffer.seek(0)
         st.download_button("Download All Certificates as ZIP", zip_buffer.getvalue(), "certificates.zip")
