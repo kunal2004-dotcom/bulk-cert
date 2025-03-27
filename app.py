@@ -38,7 +38,7 @@ if uploaded_pdf and uploaded_data:
     pdf_path = "uploaded_certificate.pdf"
     with open(pdf_path, "wb") as f:
         f.write(uploaded_pdf.read())
-    images = convert_from_path(pdf_path, first_page=1, last_page=1)
+    images = convert_from_path(pdf_path, first_page=1, last_page=1, poppler_path="/usr/bin/")
     template_image_path = "certificate_template.png"
     images[0].save(template_image_path, "PNG")
 
