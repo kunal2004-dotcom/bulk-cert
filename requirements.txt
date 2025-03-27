@@ -2,5 +2,4 @@ streamlit
 pandas
 pillow
 pdf2image
-poppler-utils
 openpyxl
