@@ -11,7 +11,7 @@ def draw_centered_text(draw, text, font, x, y, max_width):
     new_x = x + (max_width - text_width) // 2  # Centering logic
     draw.text((new_x, y), text, font=font, fill="black")
 
-def generate_certificate_pdf(student_data, template_image, text_positions, font_size=32):
+def generate_certificate_pdf(student_data, template_image, text_positions, font_size=60):
     image = Image.open(template_image)
     draw = ImageDraw.Draw(image)
     
