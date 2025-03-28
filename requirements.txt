@@ -1,8 +1,8 @@
+numpy
+opencv-python-headless
 streamlit
-pandas
-pillow
+Pillow
 pdf2image
-openpyxl
 pytesseract
-tensorflow
-opencv-python
+tensorflow-cpu
+python-poppler
