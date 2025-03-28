@@ -5,6 +5,11 @@ from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from pdf2image import convert_from_path
 from zipfile import ZipFile
+import pytesseract
+import cv2
+import numpy as np
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten
 
 def wrap_text(text, font, max_width):
     words = text.split()
@@ -40,6 +45,55 @@ def draw_centered_text(draw, text, font, x, y, max_width):
         new_x = x + (max_width - line_width) // 2
         line_y = y + (i * line_spacing)
         draw.text((new_x, line_y), line, font=font, fill="black")
+
+def analyze_template(template_path):
+    # Convert PDF to image
+    image = cv2.imread(template_path)
+    if image is None:
+        raise ValueError("Could not read the image")
+    
+    # Convert to grayscale properly
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    
+    # Create and train a simple CNN model for field detection
+    model = Sequential([
+        Conv2D(32, (3, 3), activation='relu', input_shape=(image.shape[0], image.shape[1], 3)),
+        MaxPooling2D((2, 2)),
+        Conv2D(64, (3, 3), activation='relu'),
+        MaxPooling2D((2, 2)),
+        Flatten(),
+        Dense(64, activation='relu'),
+        Dense(32, activation='relu'),
+        Dense(2, activation='sigmoid')  # Output: x, y coordinates
+    ])
+    
+    # Compile the model
+    model.compile(optimizer='adam', loss='mse')
+    
+    # Extract text and positions using OCR
+    text_data = pytesseract.image_to_data(gray, output_type=pytesseract.Output.DICT)
+    
+    # Prepare image for model input
+    input_image = cv2.resize(image, (image.shape[1], image.shape[0]))
+    input_image = np.expand_dims(input_image, axis=0) / 255.0
+    
+    # Analyze layout and create position dictionary
+    positions = {}
+    for i, text in enumerate(text_data['text']):
+        if text.strip():
+            x = text_data['left'][i]
+            y = text_data['top'][i]
+            width = text_data['width'][i]
+            height = text_data['height'][i]
+            
+            # Use model to refine positions
+            predicted_pos = model.predict(input_image, verbose=0)
+            x_refined = int(predicted_pos[0][0] * image.shape[1])
+            y_refined = int(predicted_pos[0][1] * image.shape[0])
+            
+            positions[text.strip()] = (x_refined, y_refined, width)
+    
+    return positions
 
 def generate_certificate_pdf(student_data, template_image, text_positions, font_size):
     image = Image.open(template_image)
@@ -85,14 +139,20 @@ uploaded_data = st.file_uploader("Upload Student Data (.csv or .xlsx)", type=["c
 
 font_size = st.slider("Select Font Size", min_value=20, max_value=100, value=60, step=2)
 
+# Modify the main code section
 if uploaded_pdf and uploaded_data:
     pdf_path = "uploaded_certificate.pdf"
     with open(pdf_path, "wb") as f:
         f.write(uploaded_pdf.read())
+    
+    # Convert PDF and analyze template
     images = convert_from_path(pdf_path, first_page=1, last_page=1)
     template_image_path = "certificate_template.png"
     images[0].save(template_image_path, "PNG")
-
+    
+    # Get automatic text positions
+    text_positions = analyze_template(template_image_path)
+    
     if uploaded_data.name.endswith('.csv'):
         df = pd.read_csv(uploaded_data, encoding='cp1252', skipinitialspace=False)
         df.columns = df.columns.str.strip()
