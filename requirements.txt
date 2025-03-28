@@ -3,3 +3,6 @@ pandas
 pillow
 pdf2image
 openpyxl
+pytesseract
+tensorflow
+opencv-python
