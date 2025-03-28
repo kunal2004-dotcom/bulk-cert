@@ -6,21 +6,72 @@ from io import BytesIO
 from pdf2image import convert_from_path
 from zipfile import ZipFile
 
+def wrap_text(text, font, max_width):
+    words = text.split()
+    lines = []
+    current_line = []
+    
+    for word in words:
+        current_line.append(word)
+        # Use getlength for newer PIL versions
+        line_width = font.getlength(' '.join(current_line))
+        if line_width > max_width:
+            if len(current_line) > 1:
+                current_line.pop()
+                lines.append(' '.join(current_line))
+                current_line = [word]
+            else:
+                lines.append(word)
+                current_line = []
+    
+    if current_line:
+        lines.append(' '.join(current_line))
+    return lines
+
 def draw_centered_text(draw, text, font, x, y, max_width):
-    text_width, text_height = draw.textbbox((0, 0), text, font=font)[2:]
-    new_x = x + (max_width - text_width) // 2  # Centering logic
-    draw.text((new_x, y), text, font=font, fill="black")
+    if not text:
+        return
+    
+    lines = wrap_text(text, font, max_width)
+    line_spacing = int(font.size * 1.2)  # Adjust line spacing based on font size
+    
+    for i, line in enumerate(lines):
+        line_width = font.getlength(line)
+        new_x = x + (max_width - line_width) // 2
+        line_y = y + (i * line_spacing)
+        draw.text((new_x, line_y), line, font=font, fill="black")
 
 def generate_certificate_pdf(student_data, template_image, text_positions, font_size):
     image = Image.open(template_image)
     draw = ImageDraw.Draw(image)
     
-    font_path = "DejaVuSans.ttf"  # Default font for compatibility
-    font=ImageFont.truetype(font_path,font_size)
+    try:
+        font_path = "DejaVuSans.ttf"
+        font = ImageFont.truetype(font_path, font_size)
+    except IOError:
+        # Fallback to Arial if DejaVuSans is not available
+        try:
+            font = ImageFont.truetype("arial.ttf", font_size)
+        except IOError:
+            font = ImageFont.load_default()
     
-    for field, (x, y, max_width) in text_positions.items():
-        text = str(student_data.get(field, ''))
-        draw_centered_text(draw, text, font, x, y, max_width)
+    # Process fields in specific order to prevent overlapping
+    field_order = [
+        "SR. No.", "GR.No.", "Student  ID:", "UID No.",
+        "Name", "Fathers Name", "Surname", "Mothers Name",
+        "Nationality", "Mother Tongue", "Religion", "Caste", "Sub Caste",
+        "Birth Place", "Tal", "Dist", "State", "Country",
+        "Birth Date", "In Words", "Previous School Attended",
+        "Date of Admission", "Progress", "Conduct",
+        "Date of Leaving School", "Last Class Attended", "From",
+        "Reason of Leaving the School", "Remark", "Std", "Div"
+    ]
+    
+    for field in field_order:
+        if field in text_positions:
+            x, y, max_width = text_positions[field]
+            text = str(student_data.get(field, ''))
+            draw_centered_text(draw, text, font, x, y, max_width)
     
     output = BytesIO()
     image.save(output, format="PNG")
@@ -38,7 +89,7 @@ if uploaded_pdf and uploaded_data:
     pdf_path = "uploaded_certificate.pdf"
     with open(pdf_path, "wb") as f:
         f.write(uploaded_pdf.read())
-    images = convert_from_path(pdf_path, first_page=1, last_page=1, poppler_path="/usr/bin/")
+    images = convert_from_path(pdf_path, first_page=1, last_page=1)
     template_image_path = "certificate_template.png"
     images[0].save(template_image_path, "PNG")
 
@@ -70,7 +121,7 @@ if uploaded_pdf and uploaded_data:
         "State": (500, 1140, 200),
         "Country": (1100, 1140, 200),
         "Birth Date": (700, 1215, 250),
-        "In Words": (300, 1295, 500),
+        "In Words": (300, 1295, 1000),  # Increased max_width and adjusted position
         "Previous School Attended": (470, 1375, 600),
         "Date of Admission": (510, 1450, 200),
         "Progress": (330, 1530, 200),
@@ -79,7 +130,7 @@ if uploaded_pdf and uploaded_data:
         "Last Class Attended": (950, 1610, 300),
         "From": (1300, 1610, 200),
         "Reason of Leaving the School": (550, 1685, 500),
-        "Remark": (310, 1765, 300),
+        "Remark": (310, 1765, 800),  # Increased max_width from 300 to 800
     }
 
     for idx, row in df.iterrows():
