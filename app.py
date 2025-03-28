@@ -57,7 +57,7 @@ if uploaded_pdf and uploaded_data:
         "UID No.": (450, 675, 250),
         "Name": (460, 755, 400),
         "Fathers Name": (1030, 745, 400),
-        "Surname": (470, 825, 400),
+        "Surname": (600, 825, 0),
         "Mothers Name": (1030, 825, 500),
         "Nationality": (320, 900, 200),
         "Mother Tongue": (970, 900, 600),
